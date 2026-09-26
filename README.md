@@ -4,7 +4,7 @@
 
 ![BITROT_ preview](Preview.png)
 
-*Example output: the built-in demo attractor run through a glitch stack.*
+*The BITROT_ interface with a datamosh look applied to the built-in sample.*
 
 **[Try it live](https://untruesudo.github.io/bitrot-canvas/)**
 
