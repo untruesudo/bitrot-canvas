@@ -6,7 +6,7 @@
 
 *The BITROT_ interface with a datamosh look applied to the built-in sample.*
 
-**[Try it live](https://untruesudo.github.io/bitrot-canvas/)**
+**[Try it live](https://untruesudo.github.io/bitrot-canvas/)** · **[Roadmap](ROADMAP.md)**
 
 ## ✨ Features
 
