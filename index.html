@@ -9,7 +9,11 @@
 <meta property="og:description" content="Free in-browser glitch art with real JPEG byte corruption. Nothing is uploaded.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://untruesudo.github.io/bitrot-canvas/Preview.png">
+<meta property="og:image:alt" content="The BITROT_ interface: a glitched sample image beside the layer stack.">
+<meta property="og:url" content="https://untruesudo.github.io/bitrot-canvas/">
+<meta property="og:site_name" content="BITROT_">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://untruesudo.github.io/bitrot-canvas/Preview.png">
 <style>
   :root, [data-theme="news"] { --paper: #ece6d6; --ink: #101010; --accent: #ff2a1a; --on-accent: #101010; --mute: #6d6858; }
   [data-theme="riso"]  { --paper: #f1ecdf; --ink: #1631d6; --accent: #ff4fa3; --on-accent: #1631d6; --mute: #5d64ae; }
@@ -368,6 +372,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 function log(msg) { const el = $('sLog'); el.textContent = msg; el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); if (booted) toast(msg); }
 let toastT = null;
 function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 2600); }
+let lastPipeMsg = null, lastPipeAt = 0;
+function pipelineLog(msg) {                                        // runPipeline can call this every frame (animate, export, dragging): don't spam the toast
+  const now = performance.now();
+  if (msg === lastPipeMsg && now - lastPipeAt < 4000) return;
+  lastPipeMsg = msg; lastPipeAt = now; log(msg);
+}
 
 // ---------- effect definitions ----------
 const R = (k, label, min, max, d, step = 1) => ({ k, label, t: 'range', min, max, d, step });
@@ -644,9 +654,9 @@ async function runPipeline(source, stack, sd, k, abort) {
     if (abort && abort()) return null;                             // a newer edit is waiting: stop early
     const def = defs[L.type], r = rng((sd + L.salt * 7919) | 0);
     try {
-      if (def.async) { const res = await def.applyAsync(img, L.p, r, k, W, H); if (res) img = res; else log('byte corruption skipped: the browser could not decode the damaged data'); }
+      if (def.async) { const res = await def.applyAsync(img, L.p, r, k, W, H); if (res) img = res; else pipelineLog('byte corruption skipped: the browser could not decode the damaged data'); }
       else { const res = def.apply(img, L.p, r, k, W, H); if (res) img = res; }
-    } catch (e) { log(def.label.toLowerCase() + ' layer failed and was skipped: ' + e.message); }
+    } catch (e) { pipelineLog(def.label.toLowerCase() + ' layer failed and was skipped: ' + e.message); }
   }
   return img;
 }
@@ -898,9 +908,21 @@ $('btnRandom').onclick = () => {
   if (!chosen.includes('scan')) { layers.push(newLayer('scan')); layers[layers.length - 1].open = false; }
   seed = newSeed(); buildList(); schedule(); commit('surprise: ' + nameFor(seed)); stamp('Surprise');
 };
+function recipeIssues() {                                         // mirror the limits applyRecipe enforces, so Copy can warn first
+  const nBytes = layers.filter(l => l.type === 'bytes').length, issues = [];
+  if (!layers.length) issues.push('the stack is empty, so the link would open to nothing');
+  if (layers.length > 30) issues.push(`${layers.length} layers, but a link only carries the first 30`);
+  if (nBytes > 3) issues.push(`${nBytes} byte corruption layers, but a link only carries 3`);
+  return issues;
+}
 $('btnCopy').onclick = async () => {
+  const issues = recipeIssues();
+  if (issues.length) {
+    const ok = window.confirm('This recipe link won’t match your stack exactly:\n• ' + issues.join('\n• ') + '\n\nCopy it anyway?');
+    if (!ok) { log('recipe link not copied'); return; }
+  }
   const url = location.href.split('#')[0] + recipeHash();
-  try { await navigator.clipboard.writeText(url); log('recipe link copied. anyone can apply this look to their own photo.'); stamp('Link copied'); }
+  try { await navigator.clipboard.writeText(url); log(issues.length ? 'recipe link copied (some layers were left out, see above)' : 'recipe link copied. anyone can apply this look to their own photo.'); stamp('Link copied'); }
   catch (e) { window.prompt('Copy this recipe link:', url); }
 };
 
@@ -1035,8 +1057,9 @@ const tcv = document.createElement('canvas'), tg = tcv.getContext('2d'), fcv = d
 function finishFrame(img, crop, credit, text) {                    // crop + credit tag for one finished image or animation frame
   const r = cropRect(img.width, img.height, crop);
   if (r.w === img.width && r.h === img.height && !credit) return img;
-  tcv.width = img.width; tcv.height = img.height; tg.putImageData(img, 0, 0);
-  fcv.width = r.w; fcv.height = r.h;
+  if (tcv.width !== img.width || tcv.height !== img.height) { tcv.width = img.width; tcv.height = img.height; }   // resizing a canvas clears it even to the same size
+  tg.putImageData(img, 0, 0);
+  if (fcv.width !== r.w || fcv.height !== r.h) { fcv.width = r.w; fcv.height = r.h; }
   fg.drawImage(tcv, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h);
   if (credit) drawCredit(fg, r.w, r.h, text);
   return fg.getImageData(0, 0, r.w, r.h);

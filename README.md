@@ -17,7 +17,7 @@
 - **Byte-level corruption** — re-encodes the image as a JPEG, flips real bytes in the compressed data, then lets the browser decode the damage
 - **Animated export** — record the glitch as a **GIF** (works in READMEs) or **WebM**, with adjustable length, frame rate, size and burst chance
 - **Undo / redo** — every change is tracked (`Ctrl+Z` / `Ctrl+Y`)
-- **Presets** — VHS tape, Heavy glitch, Pixel storm, Datamosh, Data rot, Forensic, Total corrupt, plus Randomize
+- **Presets** — VHS tape, Heavy glitch, Pixel storm, Datamosh, Data rot, Forensic, Total corrupt, Broadcast, Dither dream, plus Surprise me
 - **Zine-style interface** — paper grain, hard offset shadows and big drag-to-change numbers instead of sliders. Three inks: Newsprint, Riso and Night press
 - **Seeded and repeatable** — dragging a number tweaks the current glitch, *New damage* rolls a new one. Every look has a name that is exactly its seed, like "Rusted Signal 2339", so the same name with the same layers always gives the same glitch
 - **Recipe links** — *Copy recipe link* stores the layers and seed in the URL, so anyone can apply your exact look to their own photo. The image itself is never included
@@ -39,7 +39,7 @@ cd bitrot-canvas
 
 Or use it directly on GitHub Pages: **[untruesudo.github.io/bitrot-canvas](https://untruesudo.github.io/bitrot-canvas/)**
 
-Load an image with **Open…**, by dragging it onto the page, or by pasting from the clipboard.
+Load an image with **Drop a photo**, by dragging it onto the page, or by pasting from the clipboard.
 
 ## 🎮 Controls
 
